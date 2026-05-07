@@ -47,6 +47,16 @@ shifu-install gif-generator
 
 > 如果你正在用 Claude Code,直接說「**裝 gif-generator**」就好,Claude 會幫你跑。
 
+### 兩種裝法,挑一個用就好
+
+| 指令 | 適合誰 | 出錯時 |
+|---|---|---|
+| `shifu-install gif-generator` | 非工程師、第一次用、Claude Code | 中文錯誤 + 自動 fallback uv |
+| `brew install shifuairesearch/tap/gif-generator` | 工程師、寫 Brewfile / CI | 原生英文錯誤 |
+
+**最終結果完全一樣**(同一份 binary 裝到同個位置),只是中間出錯時的體驗不同。
+熟悉 brew 的工程師直接用 `brew install` 也完全 OK。
+
 ## 現有工具清單
 
 | 工具名 | 一句話用途 | 怎麼用 |
