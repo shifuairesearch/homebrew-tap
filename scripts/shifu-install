@@ -1,0 +1,173 @@
+#!/usr/bin/env bash
+# shifu-install: ShiFu 內部工具一鍵安裝器
+# 路徑:brew 為主 → 偵測常見失敗 → 自動 fallback 或印中文修法
+
+set -uo pipefail
+
+TOOL="${1:-}"
+TAP="shifuairesearch/tap"
+ORG_GH="shifuairesearch"
+TAP_README_URL="https://github.com/shifuairesearch/homebrew-tap#遇到英文錯誤查這裡"
+
+# ---------- 顏色(終端機才用,pipe 時關掉) ----------
+if [[ -t 1 ]]; then
+    BOLD=$'\033[1m'; DIM=$'\033[2m'; RED=$'\033[31m'
+    GRN=$'\033[32m'; YLW=$'\033[33m'; RST=$'\033[0m'
+else
+    BOLD=''; DIM=''; RED=''; GRN=''; YLW=''; RST=''
+fi
+
+usage() {
+    cat <<EOF
+${BOLD}shifu-install${RST} — ShiFu 內部工具一鍵安裝器
+
+用法:
+    shifu-install <工具名>
+
+範例:
+    shifu-install gif-generator
+
+可用工具清單:
+    https://github.com/shifuairesearch/homebrew-tap
+
+升級已裝工具:
+    brew update && brew upgrade \$(brew list --full-name | grep shifuairesearch)
+EOF
+}
+
+if [[ -z "$TOOL" || "$TOOL" == "-h" || "$TOOL" == "--help" ]]; then
+    usage
+    exit 0
+fi
+
+echo "${BOLD}🔧 安裝 $TOOL${RST}"
+
+# ---------- 第一步:確保 ShiFu Tap 已加入 ----------
+if ! brew tap 2>/dev/null | grep -qx "$TAP"; then
+    echo "${DIM}→ 第一次用,加入 ShiFu Tap...${RST}"
+    if ! brew tap "$TAP"; then
+        echo "${RED}❌ 加入 tap 失敗${RST}"
+        echo "   可能是網路問題,請確認可以打開 https://github.com 後重試。"
+        exit 1
+    fi
+fi
+
+# ---------- 第二步:主要路徑 brew install ----------
+echo "${DIM}→ 嘗試用 brew 安裝...${RST}"
+BREW_LOG="$(mktemp -t shifu-install.XXXXXX)"
+trap 'rm -f "$BREW_LOG"' EXIT
+
+if brew install "${TAP}/${TOOL}" 2>&1 | tee "$BREW_LOG"; then
+    echo "${GRN}✅ 透過 brew 安裝成功${RST}"
+    if command -v "$TOOL" >/dev/null 2>&1; then
+        VERSION=$("$TOOL" --version 2>/dev/null | head -1 || echo "")
+        [[ -n "$VERSION" ]] && echo "   版本:$VERSION"
+    fi
+    exit 0
+fi
+
+# ---------- 第三步:brew 失敗,判斷已知錯誤 ----------
+echo ""
+echo "${YLW}⚠️  brew 安裝失敗,判斷原因中...${RST}"
+
+# 3a. CLT 過舊
+if grep -qi "Command Line Tools" "$BREW_LOG"; then
+    cat <<EOF
+
+${RED}❌ Command Line Tools 過舊${RST}
+${BOLD}原因:${RST}macOS 升級了但底層編譯工具還是舊版,brew 無法 build。
+
+${BOLD}修法(複製貼進終端機,要輸入 Mac 開機密碼):${RST}
+
+    sudo rm -rf /Library/Developer/CommandLineTools
+    sudo xcode-select --install
+
+會跳出系統下載對話框,點「安裝」,等 5-10 分鐘下載完。
+裝完再重跑:${BOLD}shifu-install $TOOL${RST}
+EOF
+    exit 1
+fi
+
+# 3b. macOS 26 libexpat / segfault → uv fallback
+if grep -qiE "Segmentation fault|libexpat|core dumped|fatal error.*expat" "$BREW_LOG"; then
+    echo ""
+    echo "${YLW}→ 偵測到 macOS 26 libexpat bug${RST}"
+    echo "${DIM}  (Homebrew Python 跟系統 libexpat 不相容,已知 bug,改走 uv 備援)${RST}"
+    echo ""
+
+    # 確保 uv 已裝
+    if ! command -v uv >/dev/null 2>&1; then
+        echo "${DIM}→ 先安裝 uv(Rust 寫的 Python 工具,自帶 Python)...${RST}"
+        if ! brew install uv; then
+            echo "${RED}❌ 連 uv 都裝不起來${RST}"
+            echo "   請把上面的錯誤訊息貼給工程師或 Claude Code。"
+            exit 1
+        fi
+    fi
+
+    echo "${DIM}→ 用 uv 從 GitHub 直接安裝 $TOOL...${RST}"
+    if uv tool install "git+https://github.com/${ORG_GH}/${TOOL}"; then
+        echo ""
+        echo "${GRN}✅ 透過 uv 安裝成功${RST}"
+        cat <<EOF
+
+${BOLD}重要提醒:${RST}
+  • uv 裝的工具${BOLD}不會${RST}被 \`brew upgrade\` 升級
+  • 升級用:${BOLD}uv tool upgrade --all${RST}
+  • 等 Homebrew 修好 macOS 26 bug(預計幾週內),
+    可以 \`uv tool uninstall $TOOL\` 後再用 brew 重裝
+EOF
+        exit 0
+    else
+        echo "${RED}❌ uv 也失敗${RST}"
+        echo "   請把錯誤訊息貼給工程師。"
+        exit 1
+    fi
+fi
+
+# 3c. 網路問題
+if grep -qiE "Could not connect|Failed to fetch|connection refused|getaddrinfo|Could not resolve host" "$BREW_LOG"; then
+    cat <<EOF
+
+${RED}❌ 網路連不到 GitHub${RST}
+
+請依序檢查:
+  1. 瀏覽器能否打開 https://github.com
+  2. 如果有用 VPN,試斷開或重連
+  3. 如果在公司網路,可能要問 IT 是否擋了 *.githubusercontent.com
+  4. 等 5 分鐘後重試:${BOLD}shifu-install $TOOL${RST}
+EOF
+    exit 1
+fi
+
+# 3d. 找不到工具
+if grep -qiE "No available formula|No formulae found" "$BREW_LOG"; then
+    cat <<EOF
+
+${RED}❌ 找不到工具 "$TOOL"${RST}
+
+可能原因:
+  • 工具名打錯
+  • 工具還沒上 ShiFu Tap
+
+可用工具清單:
+  https://github.com/shifuairesearch/homebrew-tap
+EOF
+    exit 1
+fi
+
+# 3e. 其他未知錯誤
+cat <<EOF
+
+${RED}❌ 安裝失敗,且不在已知錯誤清單${RST}
+
+請把以下完整訊息複製,貼到 Slack #工具求救 頻道,
+或直接貼給 Claude Code:
+
+──────────────── 錯誤訊息(最後 20 行)────────────────
+$(tail -20 "$BREW_LOG")
+────────────────────────────────────────────────────
+
+更多修法見:$TAP_README_URL
+EOF
+exit 1
