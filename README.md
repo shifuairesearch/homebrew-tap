@@ -263,28 +263,6 @@ source ~/.zprofile
 
 ---
 
-## 還是搞不定?
-
-請到 ShiFu 內部 Slack 的 `#工具求救` 頻道發問,**附上**:
-1. 你跑了什麼指令
-2. **錯誤訊息全文**(整段拷貝,不要只貼一句)
-3. 你的 macOS 版本(蘋果選單 → 關於這台 Mac)
-
-工程師看到完整訊息才能快速判斷。
-
-如果你正在用 Claude Code,直接把錯誤貼給它,它會用中文解釋並建議修法。
-
-## 想貢獻一個新工具?
-
-目前流程是:
-
-1. 同事在自己的 GitHub repo 把工具寫好(含 `pyproject.toml` 或 `package.json`、`README.md`、可執行的 entry point)
-2. 把連結交給工程師
-3. 工程師審核 + 必要時重構
-4. 工程師打包並發布到這個 tap
-
-詳細的「合規規範」(避免寫死路徑、設定走 env var 等)後續會發布在內部文件。在那之前,直接找工程師聊。
-
 ## 這個 tap 的維護
 
 - Repo: <https://github.com/shifuairesearch/homebrew-tap>
