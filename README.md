@@ -19,32 +19,39 @@ brew --version
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 ```
 
-### 2. 加入 ShiFu Tap
-
-只要做一次,之後所有 ShiFu 工具都從這裡裝:
+### 2. 一次性裝好 `shifu-install`(只做一次)
 
 ```bash
-brew tap shifuairesearch/tap
+brew install shifuairesearch/tap/shifu-install
 ```
+
+`shifu-install` 是 ShiFu 自製的安裝器,會自動處理大部分常見問題
+(libexpat bug、網路問題、CLT 過舊...)並用中文提示。
+
+> 不想用也行,可以直接用原生 `brew install shifuairesearch/tap/<工具名>`,
+> 但碰到問題時錯誤訊息會是英文。
 
 ### 3. 裝你要的工具
 
 ```bash
-brew install shifuairesearch/tap/<工具名>
+shifu-install <工具名>
 ```
 
 範例:
 
 ```bash
-brew install shifuairesearch/tap/gif-generator
+shifu-install gif-generator
 ```
 
 完成。工具的指令名通常等於它的名字,在終端機直接輸入工具名就能跑。
+
+> 如果你正在用 Claude Code,直接說「**裝 gif-generator**」就好,Claude 會幫你跑。
 
 ## 現有工具清單
 
 | 工具名 | 一句話用途 | 怎麼用 |
 |---|---|---|
+| `shifu-install` | ShiFu 內部工具一鍵安裝器(自動 fallback) | `shifu-install <工具名>` |
 | `gif-generator` | 把資料夾裡的圖片批次合成 GIF | 終端機輸入 `gif-generator` 跳資料夾選擇對話框,或 `gif-generator <資料夾> --duration 1.3` |
 
 > 詳細用法看每個工具自己的 GitHub repo:`https://github.com/shifuairesearch/<工具名>`
