@@ -1,8 +1,8 @@
 class GifGenerator < Formula
   desc "批次把資料夾圖片合成 GIF (macOS, GUI + CLI)"
   homepage "https://github.com/shifuairesearch/gif-generator"
-  url "https://github.com/shifuairesearch/gif-generator/archive/refs/tags/v0.1.0.tar.gz"
-  sha256 "b0c16d5edccf6fb03b735b5edbe2784f720d783a8b918f9312e808f200c67d03"
+  url "https://github.com/shifuairesearch/gif-generator/archive/refs/tags/v0.1.1.tar.gz"
+  sha256 "08de266d9ed7cee09007096b8f7654771c74732836f15ba502d401d776cd6856"
   license "MIT"
 
   depends_on "ffmpeg"
