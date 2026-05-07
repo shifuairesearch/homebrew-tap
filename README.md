@@ -186,9 +186,42 @@ sudo chown -R $(whoami) /opt/homebrew
 
 ---
 
-### 6. `error: externally-managed-environment` 或 pip 相關英文錯誤
+### 6. `Segmentation fault`、`libexpat`、或 `pip` 一跑就 crash
 
-**意思**:Python 套件相關問題,通常是工具裝壞了。
+**意思**:macOS 26(Tahoe)早期版本的系統 `libexpat` 跟 Homebrew Python 不相容,Python 一啟動就崩潰,pip 也跟著炸。**這是 macOS 26 已知 bug,不是你 Mac 壞掉**。
+
+**修法 1(推薦)— 先試升級 Homebrew**:
+
+```bash
+brew update && brew upgrade
+```
+
+如果 Homebrew 已經修了這個 bug,升完再裝就會好。
+
+**修法 2 — 用 uv 繞過(備援方案)**:
+
+如果升級後還是失敗,改用 `uv`(它自己帶 Python,不會撞到系統 libexpat):
+
+```bash
+brew install uv
+uv tool install git+https://github.com/shifuairesearch/<工具名>
+```
+
+範例:
+
+```bash
+brew install uv
+uv tool install git+https://github.com/shifuairesearch/gif-generator
+```
+
+裝完之後可能要重開 terminal 才能用。
+
+> ⚠️ 用 uv 裝的工具不會被 `brew upgrade` 升級,要用 `uv tool upgrade --all` 升級。
+> 等 Homebrew 修好 macOS 26 的 bug(預計幾週內)就可以改回 brew。
+
+### 7. `error: externally-managed-environment` 或其他 pip 錯誤
+
+**意思**:Python 套件問題,通常是工具裝壞了。
 
 **修法**:
 
@@ -196,9 +229,11 @@ sudo chown -R $(whoami) /opt/homebrew
 brew reinstall shifuairesearch/tap/<工具名>
 ```
 
+還不行就試上一條的 uv 備援方案。
+
 ---
 
-### 7. 裝完了,打指令說 `command not found: <工具名>`
+### 8. 裝完了,打指令說 `command not found: <工具名>`
 
 **意思**:Homebrew 路徑沒進 PATH。
 
@@ -213,7 +248,7 @@ source ~/.zprofile
 
 ---
 
-### 8. macOS 跳「無法打開,因為無法驗證開發者」
+### 9. macOS 跳「無法打開,因為無法驗證開發者」
 
 **意思**:這是 macOS 的安全防護(Gatekeeper),目前 ShiFu 工具還沒做 codesign。
 
