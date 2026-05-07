@@ -49,19 +49,36 @@ brew install shifuairesearch/tap/gif-generator
 
 > 詳細用法看每個工具自己的 GitHub repo:`https://github.com/shifuairesearch/<工具名>`
 
-## 常用操作
+## 升級工具(重要,請看)
 
-### 升級單一工具到最新版
+> ShiFu 工具**不會自己升級**。要主動跑指令才會拿到新版。
+> 建議每週一上班時跑一次,或聽到內部 Slack 的工具更新公告時跑。
+
+### 一行升級全部 ShiFu 工具(建議用這個)
+
+```bash
+brew update && brew upgrade $(brew list --full-name | grep shifuairesearch)
+```
+
+複製貼進終端機。如果你正在用 Claude Code,直接說「**升級我的 ShiFu 工具**」,它會幫你跑。
+
+第一次跑會看到一堆訊息,正常。會出現以下幾種狀況:
+- `Already up-to-date` → 工具都已經是最新,沒事
+- `Upgrading <工具> X.X.X -> Y.Y.Y` → 正在升級某個工具
+- 結尾沒有紅字 Error → 升級成功
+
+### 升級單一工具
 
 ```bash
 brew upgrade shifuairesearch/tap/gif-generator
 ```
 
-### 升級所有 ShiFu 工具
+### 為什麼不自動升級?
 
-```bash
-brew upgrade $(brew list --full-name | grep shifuairesearch)
-```
+如果背景偷偷升級,可能你正在用工具趕東西時突然壞掉。Homebrew 故意不做。
+所以**主動跑升級**是唯一方式。
+
+## 其他常用操作
 
 ### 看某工具的詳細資訊
 
