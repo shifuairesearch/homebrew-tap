@@ -89,36 +89,131 @@ brew untap shifuairesearch/tap
 
 Claude 會自動跑 `brew tap` + `brew install`,並在裝完帶你跑一次驗證。
 
-## 遇到問題
+## 遇到英文錯誤?查這裡
 
-### 提示「Command Line Tools 過舊」
+> 直接複製錯誤訊息其中**前 30 個字**,在這頁用 Cmd+F 搜尋。
+> 找到對應的中文修法,複製指令貼進終端機跑。
 
-每次 macOS 升級大版本後,要把 CLT 一起升:
+### 1. `Your Command Line Tools (CLT) does not support macOS XX`
+
+**意思**:Mac 系統升級了,但底層的 Command Line Tools(編譯器、git 等)還停在舊版本,跟新系統對不上。
+
+**修法**:
 
 ```bash
 sudo rm -rf /Library/Developer/CommandLineTools
 sudo xcode-select --install
 ```
 
-過程會跳出「下載 Command Line Tools」的對話框,點「安裝」,等 5-10 分鐘下載完。
+執行後會:
+1. 要你輸入 Mac 密碼(就是開機那組)
+2. 跳出「Command Line Tools」下載對話框 → 點「安裝」→ 等 5-10 分鐘
+3. 裝完再重跑剛才失敗的 brew 指令
 
-### 提示「找不到 ffmpeg」(或其他依賴)
+**什麼時候會遇到**:每次 macOS 大版本升級後(像從 macOS 15 → 16 之類)。一年 1-2 次。
 
-正常情況 Homebrew 會自動裝。如果沒有,手動補:
+---
+
+### 2. `command not found: brew`
+
+**意思**:你的 Mac 還沒裝 Homebrew。
+
+**修法**:
 
 ```bash
-brew install ffmpeg
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 ```
 
-### 工具裝起來但跑不動
+過程會問你輸入密碼,等 5-10 分鐘。裝完關掉終端機,**重新打開**才生效(這步常被忘記)。
 
-先試重裝看看:
+---
+
+### 3. `Error: No available formula with the name "..."`
+
+**意思**:你還沒把 ShiFu Tap 加進 Homebrew,或工具名打錯了。
+
+**修法**:
+
+```bash
+brew tap shifuairesearch/tap
+brew install shifuairesearch/tap/<工具名>
+```
+
+注意工具名要完全正確(看本頁上面的「現有工具清單」)。
+
+---
+
+### 4. `Error: Permission denied @ ...` 或 `Operation not permitted`
+
+**意思**:檔案權限不對,通常是之前用 `sudo` 跑過 brew 把檔案搞髒了。
+
+**修法**:
+
+```bash
+sudo chown -R $(whoami) /opt/homebrew
+```
+
+> ⚠️ 永遠不要用 `sudo brew ...`。Homebrew 設計上不需要 sudo,用了反而會壞事。
+
+---
+
+### 5. `Could not connect to GitHub` / `Failed to fetch`
+
+**意思**:網路連不到 GitHub。可能是公司網路擋了、VPN 斷線、或 GitHub 那邊有問題。
+
+**修法**:
+1. 確認可以打開 <https://github.com>
+2. 如果有用 VPN,先試斷開或重連
+3. 如果在公司網路,問 IT 是否擋了 `*.githubusercontent.com`
+4. 等 5 分鐘再試一次
+
+---
+
+### 6. `error: externally-managed-environment` 或 pip 相關英文錯誤
+
+**意思**:Python 套件相關問題,通常是工具裝壞了。
+
+**修法**:
 
 ```bash
 brew reinstall shifuairesearch/tap/<工具名>
 ```
 
-還是不行的話到 ShiFu 內部 Slack 的 `#工具求救` 頻道發問,或直接找工程師。
+---
+
+### 7. 裝完了,打指令說 `command not found: <工具名>`
+
+**意思**:Homebrew 路徑沒進 PATH。
+
+**修法**:
+
+```bash
+echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile
+source ~/.zprofile
+```
+
+之後打開新的終端機視窗就會生效。
+
+---
+
+### 8. macOS 跳「無法打開,因為無法驗證開發者」
+
+**意思**:這是 macOS 的安全防護(Gatekeeper),目前 ShiFu 工具還沒做 codesign。
+
+**暫時的修法**:在 Finder 裡找到那個工具,**按住 Control + 點一下圖示**(或右鍵)→ 點「打開」→ 第二次跳警告選「打開」。第一次破例後之後就不會再問。
+
+---
+
+## 還是搞不定?
+
+請到 ShiFu 內部 Slack 的 `#工具求救` 頻道發問,**附上**:
+1. 你跑了什麼指令
+2. **錯誤訊息全文**(整段拷貝,不要只貼一句)
+3. 你的 macOS 版本(蘋果選單 → 關於這台 Mac)
+
+工程師看到完整訊息才能快速判斷。
+
+如果你正在用 Claude Code,直接把錯誤貼給它,它會用中文解釋並建議修法。
 
 ## 想貢獻一個新工具?
 
